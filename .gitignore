@@ -1,2 +1,11 @@
 /.DS_Store
 /internal docs
+
+# virtual environment
+.venv
+
+# configuration
+.env
+
+# models
+models
