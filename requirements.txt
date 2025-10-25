@@ -1,0 +1,10 @@
+pyyaml
+sqlalchemy
+python-dotenv
+numpy
+scikit-learn
+fastapi
+uvicorn
+pydantic
+# Optional: for better embeddings (install only if desired)
+sentence-transformers>=2.2.2
