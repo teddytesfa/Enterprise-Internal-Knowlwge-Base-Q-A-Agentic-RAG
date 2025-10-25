@@ -8,3 +8,7 @@ uvicorn
 pydantic
 # Optional: for better embeddings (install only if desired)
 sentence-transformers>=2.2.2
+
+# Optional: llamaIndex for ingestion & indexing (uncomment to enable)
+# llama-index>=0.8.0
+
