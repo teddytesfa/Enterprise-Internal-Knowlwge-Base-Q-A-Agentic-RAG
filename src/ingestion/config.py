@@ -6,16 +6,26 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.gemini import Gemini
 import dotenv
 
-# Load environment variables
-dotenv.load_dotenv()
+# --- Project root (relative) ---
+# Compute the project root relative to this file (src/ingestion/config.py -> project root)
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+
+# Load environment variables from the project-root `.env` explicitly so the
+# settings work regardless of the current working directory.
+dotenv_path = PROJECT_ROOT / ".env"
+if dotenv_path.exists():
+    dotenv.load_dotenv(dotenv_path=dotenv_path)
+else:
+    # fallback to default behavior (load from environment)
+    dotenv.load_dotenv()
 
 # --- PATHS ---
-PROJECT_ROOT = Path("/Users/teddytesfa/projects/AI-data-science-and-ML/Enterprise Internal Knowlwge Base Q&A Agentic RAG")
 SAMPLE_DATA_DIR = PROJECT_ROOT / "resources" / "sample-datasets"
 VECTOR_DB_DIR = PROJECT_ROOT / "data" / "vector_db"
 
 # --- API KEYS ---
-GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+# Read GOOGLE_API_KEY from environment (no hard-coded secret in code)
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
 # --- LLAMAINDEX SETTINGS ---
 def initialize_llamaindex_settings():
