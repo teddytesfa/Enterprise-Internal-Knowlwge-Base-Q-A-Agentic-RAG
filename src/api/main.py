@@ -16,6 +16,11 @@ app = FastAPI()
 # --- 1. Initialize Settings ---
 initialize_llamaindex_settings()
 
+# TODO: Refactor this logic. Building the index on every startup is inefficient
+# and significantly increases the API's startup time.
+# A better approach would be to have a separate, persistent index
+# that the API can load on startup.
+
 # --- 2. Load Documents ---
 print("\n🔄 Loading documents...")
 connector = DocumentConnector(SAMPLE_DATA_DIR)
