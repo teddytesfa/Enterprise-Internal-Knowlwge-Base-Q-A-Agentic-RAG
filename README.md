@@ -31,6 +31,8 @@ The pipeline consists of the following steps:
 │   │   └───troubleshooting_local_setup.md
 │   └───static/
 ├───src/
+│   ├───api/
+│   │   └───main.py
 │   └───ingestion/
 │       ├───__init__.py
 │       ├───config.py
@@ -43,6 +45,7 @@ The pipeline consists of the following steps:
 -   `data/vector_db`: Stores the ChromaDB vector index.
 -   `notebooks`: Contains Jupyter notebooks for experimentation and prototyping.
 -   `resources/sample-datasets`: Contains sample documents for the knowledge base.
+-   `src/api`: Contains the FastAPI application.
 -   `src/ingestion`: Contains the Python modules for the ingestion and indexing pipeline.
 
 ## Setup and Installation
@@ -74,17 +77,20 @@ The pipeline consists of the following steps:
 
 ## Usage
 
-To run the document ingestion and indexing pipeline, execute the `main.py` script:
+To run the API server, execute the `main.py` script in the `src/api` directory:
 
 ```bash
-python src/ingestion/main.py
+python src/api/main.py
 ```
 
-This will:
-1.  Load the documents from the `resources/sample-datasets` directory.
-2.  Chunk the documents.
-3.  Generate embeddings and build the vector index in the `data/vector_db` directory.
-4.  Run a few test queries to verify the pipeline.
+This will start the FastAPI server. The server will automatically load the documents, create the index, and expose the `/query` endpoint for you to ask questions.
+
+You can test the endpoint with `curl`:
+```bash
+curl -X POST "http://0.0.0.0:8000/query" \
+-H "Content-Type: application/json" \
+-d '{"question": "How do i set up my local dev for nexus project"}'
+```
 
 ## Notebook
 
