@@ -20,6 +20,7 @@ initialize_llamaindex_settings()
 # and significantly increases the API's startup time.
 # A better approach would be to have a separate, persistent index
 # that the API can load on startup.
+# Refer to the 'Saving and Loading Indexes Locally' section (Page 175) of 'Building LLMs for Production' Book
 
 # --- 2. Load Documents ---
 print("\n🔄 Loading documents...")
