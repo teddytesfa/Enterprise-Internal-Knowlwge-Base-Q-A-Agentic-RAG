@@ -10,3 +10,5 @@ python-dotenv
 ipython
 fastapi
 uvicorn
+pytest
+httpx

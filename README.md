@@ -92,6 +92,16 @@ curl -X POST "http://0.0.0.0:8000/query" \
 -d '{"question": "How do i set up my local dev for nexus project"}'
 ```
 
+## Testing
+
+To run the unit tests for the application, navigate to the project root directory and execute the following command:
+
+```bash
+pytest tests/
+```
+
+This will run all tests located in the `tests/` directory.
+
 ## Notebook
 
 The `notebooks/01_document_ingestion_indexing.ipynb` notebook provides a detailed, step-by-step walkthrough of the entire pipeline. It's a great resource for understanding the implementation details and for experimenting with different configurations.
