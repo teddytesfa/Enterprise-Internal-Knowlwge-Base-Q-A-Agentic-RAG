@@ -1,0 +1,14 @@
+llama-index
+llama-index-embeddings-huggingface
+llama-index-llms-gemini
+llama-index-vector-stores-chroma
+google-generativeai
+chromadb
+# Numerical library required by sentence-transformers / torch for embeddings
+numpy<2
+python-dotenv
+ipython
+fastapi
+uvicorn
+pytest
+httpx
