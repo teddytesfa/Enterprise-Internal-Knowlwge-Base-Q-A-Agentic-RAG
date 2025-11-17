@@ -1,4 +1,3 @@
-
 import os
 from pathlib import Path
 from llama_index.core import Settings
@@ -7,7 +6,7 @@ from llama_index.llms.gemini import Gemini
 import dotenv
 
 # --- Project root (relative) ---
-# Compute the project root relative to this file (src/ingestion/config.py -> project root)
+# Compute the project root relative to this file (src/config/config.py -> project root)
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 # Load environment variables from the project-root `.env` explicitly so the
@@ -30,7 +29,7 @@ GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 # --- LLAMAINDEX SETTINGS ---
 def initialize_llamaindex_settings():
     """Initializes global settings for LlamaIndex."""
-    
+
     if not GOOGLE_API_KEY:
         print("⚠️  WARNING: GOOGLE_API_KEY not found in environment variables.")
         print("   Please set it using: export GOOGLE_API_KEY='your-api-key'")
@@ -58,4 +57,3 @@ def initialize_llamaindex_settings():
     print(f"   - LLM: {llm.model}")
     print(f"   - Chunk Size: {Settings.chunk_size}")
     print(f"   - Chunk Overlap: {Settings.chunk_overlap}")
-

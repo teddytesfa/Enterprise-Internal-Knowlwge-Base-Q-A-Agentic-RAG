@@ -1,4 +1,4 @@
-from config import initialize_llamaindex_settings, SAMPLE_DATA_DIR, VECTOR_DB_DIR
+from config.config import initialize_llamaindex_settings, SAMPLE_DATA_DIR, VECTOR_DB_DIR
 from connector import DocumentConnector
 from indexer import chunk_documents, build_index
 from IPython.display import display, Markdown
