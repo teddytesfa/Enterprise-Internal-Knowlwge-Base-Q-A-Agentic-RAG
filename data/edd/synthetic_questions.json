@@ -1,0 +1,56 @@
+[
+    {
+        "id": "q_001",
+        "question": "How do I set up my local development environment for the Nexus project?",
+        "persona_id": "persona_new_hire",
+        "scenario_id": "scenario_poor_relevance",
+        "expected_insight": "A step-by-step list including 'install python 3.9', 'pip install -r requirements.txt', and 'setting environment variables'.",
+        "expected_citation_keywords": [
+            "troubleshooting_local_setup.md",
+            "onboarding"
+        ]
+    },
+    {
+        "id": "q_002",
+        "question": "What is the specific API endpoint for submitting a new expense report in the v2 API?",
+        "persona_id": "persona_senior_dev",
+        "scenario_id": "scenario_conflict_resolution",
+        "expected_insight": "The endpoint is POST /api/v2/expenses. Note: v1 /api/submit-expense is deprecated.",
+        "expected_citation_keywords": [
+            "company_handbook.md",
+            "api_v2_docs"
+        ]
+    },
+    {
+        "id": "q_003",
+        "question": "What is the policy on remote work for Q3?",
+        "persona_id": "persona_pm",
+        "scenario_id": "scenario_info_overload",
+        "expected_insight": "Remote work is allowed for up to 3 days a week. Full remote requires approval from Director level.",
+        "expected_citation_keywords": [
+            "company_handbook.md",
+            "hr_policy"
+        ]
+    },
+    {
+        "id": "q_004",
+        "question": "I'm getting a 'Connection Refused' error when running the ingestion script. What should I check?",
+        "persona_id": "persona_new_hire",
+        "scenario_id": "scenario_poor_relevance",
+        "expected_insight": "Check if the ChromaDB container is running and if the port 8000 is exposed. Also verify GOOGLE_API_KEY.",
+        "expected_citation_keywords": [
+            "troubleshooting_local_setup.md"
+        ]
+    },
+    {
+        "id": "q_005",
+        "question": "Did we decide to use the 'Standard' or 'Enterprise' plan for the new cloud vendor?",
+        "persona_id": "persona_pm",
+        "scenario_id": "scenario_conflict_resolution",
+        "expected_insight": "We decided on 'Enterprise' plan as of the meeting on June 15th due to security requirements.",
+        "expected_citation_keywords": [
+            "project_nexus_onboarding_guide.md",
+            "decision_log"
+        ]
+    }
+]
