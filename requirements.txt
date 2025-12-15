@@ -14,3 +14,4 @@ pytest
 httpx
 groq
 colorama
+llama-index-llms-groq

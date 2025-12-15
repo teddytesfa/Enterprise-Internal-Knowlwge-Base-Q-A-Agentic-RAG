@@ -1,17 +1,27 @@
-def completions_create(client, messages: list, model: str) -> str:
+from llama_index.core.llms import LLM
+from llama_index.core.base.llms.types import ChatMessage, MessageRole
+
+def completions_create(llm: LLM, messages: list) -> str:
     """
-    Sends a request to the client's `completions.create` method to interact with the language model.
+    Sends a request to the configured LLM to generate a response.
 
     Args:
-        client (Groq): The Groq client object
-        messages (list[dict]): A list of message objects containing chat history for the model.
-        model (str): The model to use for generating tool calls and responses.
+        llm (LLM): The LlamaIndex LLM instance.
+        messages (list[dict]): A list of message objects containing chat history.
 
     Returns:
         str: The content of the model's response.
     """
-    response = client.chat.completions.create(messages=messages, model=model)
-    return str(response.choices[0].message.content)
+    # Convert dict messages to ChatMessage objects
+    chat_messages = []
+    for msg in messages:
+        role_str = msg["role"]
+        # Map simple roles to MessageRole enum if needed, or pass string
+        # LlamaIndex ChatMessage accepts 'user', 'assistant', 'system' strings generally.
+        chat_messages.append(ChatMessage(role=role_str, content=msg["content"]))
+
+    response = llm.chat(chat_messages)
+    return str(response.message.content)
 
 
 def build_prompt_structure(prompt: str, role: str, tag: str = "") -> dict:

@@ -3,7 +3,8 @@ import re
 
 from colorama import Fore
 from dotenv import load_dotenv
-from groq import Groq
+from llama_index.core.llms import LLM
+from src.config.config import get_agent_llm
 
 from src.agent.tool import Tool
 from src.agent.tool import validate_arguments
@@ -76,8 +77,7 @@ class ReactAgent:
     collect tool signatures, and process multiple tool calls in a given round of interaction.
 
     Attributes:
-        client (Groq): The Groq client used to handle model-based completions.
-        model (str): The name of the model used for generating responses. Default is "llama-3.3-70b-versatile".
+        llm (LLM): The LlamaIndex LLM instance used for generating responses.
         tools (list[Tool]): A list of Tool instances available for execution.
         tools_dict (dict): A dictionary mapping tool names to their corresponding Tool instances.
     """
@@ -85,14 +85,14 @@ class ReactAgent:
     def __init__(
         self,
         tools: Tool | list[Tool],
-        model: str = "llama-3.3-70b-versatile",
+        llm: LLM | None = None, # Make LLM optional, default to config if None
         system_prompt: str = BASE_SYSTEM_PROMPT,
     ) -> None:
-        self.client = Groq()
-        self.model = model
+        self.llm = llm if llm else get_agent_llm()
         self.system_prompt = system_prompt
         self.tools = tools if isinstance(tools, list) else [tools]
         self.tools_dict = {tool.name: tool for tool in self.tools}
+        print(Fore.CYAN + f"ReactAgent initialized with LLM: {self.llm.metadata.model_name}")
 
     def add_tool_signatures(self) -> str:
         """
@@ -174,7 +174,7 @@ class ReactAgent:
             # Run the ReAct loop for max_rounds
             for _ in range(max_rounds):
 
-                completion = completions_create(self.client, chat_history, self.model)
+                completion = completions_create(self.llm, chat_history)
 
                 response = extract_tag_content(str(completion), "response")
                 if response.found:
@@ -186,11 +186,12 @@ class ReactAgent:
 
                 update_chat_history(chat_history, completion, "assistant")
 
-                print(Fore.MAGENTA + f"\nThought: {thought.content[0]}")
+                if thought.found:
+                    print(Fore.MAGENTA + f"\nThought: {thought.content[0]}")
 
                 if tool_calls.found:
                     observations = self.process_tool_calls(tool_calls.content)
                     print(Fore.BLUE + f"\nObservations: {observations}")
                     update_chat_history(chat_history, f"{observations}", "user")
 
-        return completions_create(self.client, chat_history, self.model)
+        return completions_create(self.llm, chat_history)

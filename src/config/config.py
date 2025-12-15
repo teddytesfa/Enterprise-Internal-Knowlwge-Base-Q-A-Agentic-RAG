@@ -3,6 +3,8 @@ from pathlib import Path
 from llama_index.core import Settings
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.llms.gemini import Gemini
+from llama_index.llms.groq import Groq
+from llama_index.core.llms import LLM
 import dotenv
 
 # --- Project root (relative) ---
@@ -25,8 +27,32 @@ VECTOR_DB_DIR = PROJECT_ROOT / "data" / "vector_db"
 # --- API KEYS ---
 # Read GOOGLE_API_KEY from environment (no hard-coded secret in code)
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # --- LLAMAINDEX SETTINGS ---
+def get_agent_llm() -> LLM:
+    """
+    Factory to return the configured LLM based on environment variables.
+    Defaults to Gemini if LLM_PROVIDER is not set or set to 'gemini'.
+    """
+    provider = os.getenv("LLM_PROVIDER", "groq").lower()
+
+    if provider == "groq":
+        if not GROQ_API_KEY:
+            # Fallback or error handling
+            print("⚠️  WARNING: GROQ_API_KEY not found. Attempting to use default or failing.")
+        
+        return Groq(model="llama-3.3-70b-versatile", api_key=GROQ_API_KEY)
+    
+    elif provider == "gemini":
+        return Gemini(
+             model="models/gemini-2.5-flash",
+             api_key=GOOGLE_API_KEY
+        )
+    else:
+        raise ValueError(f"Unknown LLM_PROVIDER: {provider}")
+
+
 def initialize_llamaindex_settings():
     """Initializes global settings for LlamaIndex."""
 
@@ -41,10 +67,7 @@ def initialize_llamaindex_settings():
     )
 
     # Set up LLM
-    llm = Gemini(
-        model="models/gemini-2.5-flash",
-        api_key=GOOGLE_API_KEY if GOOGLE_API_KEY else None
-    )
+    llm = get_agent_llm()
 
     # Configure global settings
     Settings.embed_model = embed_model
