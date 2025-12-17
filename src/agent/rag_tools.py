@@ -1,4 +1,4 @@
-from src.agent.tool import tool, Tool
+from agent.tool import tool, Tool
 
 def create_rag_tool(index) -> Tool:
     """

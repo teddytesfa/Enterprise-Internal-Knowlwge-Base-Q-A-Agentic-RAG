@@ -3,16 +3,16 @@ import re
 
 from colorama import Fore
 from dotenv import load_dotenv
+from config.config import get_agent_llm
 from llama_index.core.llms import LLM
-from src.config.config import get_agent_llm
 
-from src.agent.tool import Tool
-from src.agent.tool import validate_arguments
-from src.agent.utils.completions import build_prompt_structure
-from src.agent.utils.completions import ChatHistory
-from src.agent.utils.completions import completions_create
-from src.agent.utils.completions import update_chat_history
-from src.agent.utils.extraction import extract_tag_content
+from agent.tool import Tool
+from agent.tool import validate_arguments
+from agent.utils.completions import build_prompt_structure
+from agent.utils.completions import ChatHistory
+from agent.utils.completions import completions_create
+from agent.utils.completions import update_chat_history
+from agent.utils.extraction import extract_tag_content
 
 load_dotenv()
 
