@@ -1,55 +1,197 @@
-"""ReAct agent initialization and management."""
+import json
+import re
 
-from llama_index.core.agent import ReActAgent, AgentWorkflow
-from llama_index.core import Settings
-from config.config import initialize_llamaindex_settings
-from typing import List
-from .tools import create_query_tool
-from .prompts import REACT_SYSTEM_PROMPT
+from colorama import Fore
+from dotenv import load_dotenv
+from llama_index.core.llms import LLM
+from src.config.config import get_agent_llm
 
-class ReActRAGAgent:
-    """ReAct agent for internal knowledge base Q&A."""
-    
-    def __init__(self, vector_index, verbose: bool = True):
-        # Initialize settings first
-        initialize_llamaindex_settings()
+from src.agent.tool import Tool
+from src.agent.tool import validate_arguments
+from src.agent.utils.completions import build_prompt_structure
+from src.agent.utils.completions import ChatHistory
+from src.agent.utils.completions import completions_create
+from src.agent.utils.completions import update_chat_history
+from src.agent.utils.extraction import extract_tag_content
 
-        self.index = vector_index
-        self.verbose = verbose
-        self.agent = self._initialize_agent()
-    
-    def _initialize_agent(self) -> ReActAgent:
-        """Initialize ReAct agent with tools and prompts."""
-        query_tool = create_query_tool(self.index)
-        
-        agent = ReActAgent(
-            tools=[query_tool],
-            llm=Settings.llm,
-            verbose=self.verbose,
-            max_iterations=10,
-            system_prompt=REACT_SYSTEM_PROMPT
+load_dotenv()
+
+BASE_SYSTEM_PROMPT = ""
+
+
+REACT_SYSTEM_PROMPT = """
+You operate by running a loop with the following steps: Thought, Action, Observation.
+You are provided with function signatures within <tools></tools> XML tags.
+You may call one or more functions to assist with the user query. Don' make assumptions about what values to plug
+into functions. Pay special attention to the properties 'types'. You should use those types as in a Python dict.
+
+For each function call return a json object with function name and arguments within <tool_call></tool_call> XML tags as follows:
+
+<tool_call>
+{"name": <function-name>,"arguments": <args-dict>, "id": <monotonically-increasing-id>}
+</tool_call>
+
+Here are the available tools / actions:
+
+<tools>
+%s
+</tools>
+
+Example session:
+
+<question>What's the parential leave duration according to the company HR policy?</question>
+<thought>I need to get the parental leave from the internal company HR plicy related documents</thought>
+<tool_call>{"name": "rag_query_engine","arguments": {"query": "parential leave duration"}, "id": 0}</tool_call>
+
+You will be called again with this:
+
+<observation>{0: "According to our HR policies, parental leave is 16 weeks. [Source: company_handbook.md]"}</observation>
+
+You then output:
+
+<response>
+According to our HR policies, parental leave is 16 weeks.
+
+1.  Standard leave is 16 weeks.
+2.  Additional leave may be granted.
+
+[Source: company_handbook.md]
+</response>
+
+Additional constraints:
+
+- Only provide information found in company documents
+- If information is not found, explicitly state "I could not find..."
+- Never make up or infer information not present in the documents
+- For queries outside the knowledge base scope, politely decline
+- If a query is too vague, ask for clarification before searching
+- Always cite sources in the format [Source: document_name]
+- If the user asks you something unrelated to any of the tools above, answer freely enclosing your answer with <response></response> tags.
+"""
+
+
+class ReactAgent:
+    """
+    A class that represents an agent using the ReAct logic that interacts with tools to process
+    user inputs, make decisions, and execute tool calls. The agent can run interactive sessions,
+    collect tool signatures, and process multiple tool calls in a given round of interaction.
+
+    Attributes:
+        llm (LLM): The LlamaIndex LLM instance used for generating responses.
+        tools (list[Tool]): A list of Tool instances available for execution.
+        tools_dict (dict): A dictionary mapping tool names to their corresponding Tool instances.
+    """
+
+    def __init__(
+        self,
+        tools: Tool | list[Tool],
+        llm: LLM | None = None, # Make LLM optional, default to config if None
+        system_prompt: str = BASE_SYSTEM_PROMPT,
+    ) -> None:
+        self.llm = llm if llm else get_agent_llm()
+        self.system_prompt = system_prompt
+        self.tools = tools if isinstance(tools, list) else [tools]
+        self.tools_dict = {tool.name: tool for tool in self.tools}
+        print(Fore.CYAN + f"ReactAgent initialized with LLM: {self.llm.metadata.model_name}")
+
+    def add_tool_signatures(self) -> str:
+        """
+        Collects the function signatures of all available tools.
+
+        Returns:
+            str: A concatenated string of all tool function signatures in JSON format.
+        """
+        return "".join([tool.fn_signature for tool in self.tools])
+
+    def process_tool_calls(self, tool_calls_content: list) -> dict:
+        """
+        Processes each tool call, validates arguments, executes the tools, and collects results.
+
+        Args:
+            tool_calls_content (list): List of strings, each representing a tool call in JSON format.
+
+        Returns:
+            dict: A dictionary where the keys are tool call IDs and values are the results from the tools.
+        """
+        observations = {}
+        for tool_call_str in tool_calls_content:
+            tool_call = json.loads(tool_call_str)
+            tool_name = tool_call["name"]
+            tool = self.tools_dict[tool_name]
+
+            print(Fore.GREEN + f"\nUsing Tool: {tool_name}")
+
+            # Validate and execute the tool call
+            validated_tool_call = validate_arguments(
+                tool_call, json.loads(tool.fn_signature)
+            )
+            print(Fore.GREEN + f"\nTool call dict: \n{validated_tool_call}")
+
+            result = tool.run(**validated_tool_call["arguments"])
+            print(Fore.GREEN + f"\nTool result: \n{result}")
+
+            # Store the result using the tool call ID
+            observations[validated_tool_call["id"]] = result
+
+        return observations
+
+    def run(
+        self,
+        user_msg: str,
+        max_rounds: int = 10,
+    ) -> str:
+        """
+        Executes a user interaction session, where the agent processes user input, generates responses,
+        handles tool calls, and updates chat history until a final response is ready or the maximum
+        number of rounds is reached.
+
+        Args:
+            user_msg (str): The user's input message to start the interaction.
+            max_rounds (int, optional): Maximum number of interaction rounds the agent should perform. Default is 10.
+
+        Returns:
+            str: The final response generated by the agent after processing user input and any tool calls.
+        """
+        user_prompt = build_prompt_structure(
+            prompt=user_msg, role="user", tag="question"
         )
-        return agent
-    
-    async def query(self, question: str) -> dict:
-        """Execute a query through the ReAct agent."""
-        workflow = AgentWorkflow(
-                    agents=[self.agent],
-                    root_agent=self.agent.name,
-                   )
+        if self.tools:
+            self.system_prompt += (
+                "\n" + REACT_SYSTEM_PROMPT % self.add_tool_signatures()
+            )
 
-        # Run the workflow
-        handler = workflow.run(user_msg=question)
-        response = await handler
+        chat_history = ChatHistory(
+            [
+                build_prompt_structure(
+                    prompt=self.system_prompt,
+                    role="system",
+                ),
+                user_prompt,
+            ]
+        )
 
-        
-        return {
-            "answer": str(response),
-            "sources": self._extract_sources(response),
-            "reasoning_steps": len(response.source_nodes) if hasattr(response, 'source_nodes') else 0
-        }
-    
-    def _extract_sources(self, response) -> List[str]:
-        """Extract source document names from response."""
-        # Implementation to parse citations
-        pass
+        if self.tools:
+            # Run the ReAct loop for max_rounds
+            for _ in range(max_rounds):
+
+                completion = completions_create(self.llm, chat_history)
+
+                response = extract_tag_content(str(completion), "response")
+                if response.found:
+                   # print(Fore.YELLOW + f"\nResponse: {response.content[0]}")
+                    return response.content[0]
+
+                thought = extract_tag_content(str(completion), "thought")
+                tool_calls = extract_tag_content(str(completion), "tool_call")
+
+                update_chat_history(chat_history, completion, "assistant")
+
+                if thought.found:
+                    print(Fore.MAGENTA + f"\nThought: {thought.content[0]}")
+
+                if tool_calls.found:
+                    observations = self.process_tool_calls(tool_calls.content)
+                    print(Fore.BLUE + f"\nObservations: {observations}")
+                    update_chat_history(chat_history, f"{observations}", "user")
+
+        return completions_create(self.llm, chat_history)

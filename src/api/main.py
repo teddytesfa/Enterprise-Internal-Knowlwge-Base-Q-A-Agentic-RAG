@@ -9,14 +9,16 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from config.config import VECTOR_DB_DIR
 from storage.storage import load_vector_index
-from agent.react_agent import ReActRAGAgent
+from agent.react_agent import ReactAgent
+from agent.rag_tools import create_rag_tool
 
 app = FastAPI()
 
 index = load_vector_index(VECTOR_DB_DIR)
 
-# Initialize ReAct agent with the loaded index
-react_agent = ReActRAGAgent(index, verbose=True)
+# Initialize ReAct agent with the loaded index via tool
+rag_tool = create_rag_tool(index)
+react_agent = ReactAgent(tools=[rag_tool])
 
 class Query(BaseModel):
     question: str
@@ -24,12 +26,11 @@ class Query(BaseModel):
 @app.post("/query")
 async def run_query(query: Query):
     """Execute query through ReAct agent."""
-    result = await react_agent.query(query.question)
-    return {
-        "answer": result["answer"],
-        "sources": result["sources"],
-        "reasoning_steps": result["reasoning_steps"]
-    }
+    # The new ReactAgent.run returns a single string response.
+    # Future improvements can parse this back into structured output if needed.
+    result_str = react_agent.run(query.question)
+    
+    return result_str
 
 if __name__ == "__main__":
     import uvicorn

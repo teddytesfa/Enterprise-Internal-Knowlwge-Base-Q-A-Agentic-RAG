@@ -1,107 +1,94 @@
-# Enterprise Internal Knowledge Base Q&A Agentic RAG - Document Ingestion and Indexing
+# Enterprise Internal Knowledge Base Q&A Agentic RAG
 
-This branch implements the document ingestion and indexing pipeline for an Enterprise Internal Knowledge Base Q&A Agentic RAG. The goal is to build a system that can answer questions based on a collection of internal documents.
+An autonomous **ReAct Agent** designed to answer complex questions about internal enterprise documents. This system leverages **Retrieval-Augmented Generation (RAG)** to ground its responses in a private knowledge base, ensuring accuracy and relevance.
 
-## Overview
+## 🚀 Key Features
 
-The core of this project branch is a pipeline that takes raw documents, processes them, and creates a searchable vector index. This index can then be used by a Retrieval-Augmented Generation (RAG) agent to find relevant information and answer user queries.
+-   **Agentic Workflow**: Implements a custom **ReAct (Reasoning + Acting)** loop, allowing the AI to "think" before it answers and dynamically query the knowledge base as needed.
+-   **RAG Pipeline**: Robust ingestion system that chunks and indexes documents (Markdown, PDF, etc.) into a vector store.
+-   **Multi-LLM Support**: Configurable to run with **Google Gemini** or **Groq** (powering Llama 3 models) for high-speed inference.
+-   **API-First Design**: Exposes a clean FastAPI interface for easy integration with frontends or other services.
 
-The pipeline consists of the following steps:
+## 🛠️ Tech Stack
 
-1.  **Document Ingestion**: Loads documents from a specified directory. It supports various file formats, including Markdown, PDF, and more.
-2.  **Document Chunking**: Splits the loaded documents into smaller, manageable chunks using a sentence-aware splitter.
-3.  **Embedding Generation**: Converts each document chunk into a vector embedding using a pre-trained sentence transformer model (`BAAI/bge-small-en-v1.5`).
-4.  **Vector Indexing**: Stores the generated embeddings in a `ChromaDB` vector database, creating a semantic index that can be efficiently searched.
+-   **Orchestration (The RAG Pipeline)**: [LlamaIndex](https://www.llamaindex.ai/)
+-   **LLM Providers**: Google Gemini / Groq
+-   **Vector Database**: ChromaDB
+-   **API Framework**: FastAPI
+-   **Language**: Python 3.10+
 
-## Project Structure
+## ⚡ Quick Start
 
-```
-/
-├───.gitignore
-├───README.md
-├───data/
-│   └───vector_db/
-├───docs/
-├───notebooks/
-│   └───01_document_ingestion_indexing.ipynb
-├───resources/
-│   ├───sample-datasets/
-│   │   ├───company_handbook.md
-│   │   ├───project_nexus_onboarding_guide.md
-│   │   └───troubleshooting_local_setup.md
-│   └───static/
-├───src/
-│   ├───api/
-│   │   └───main.py
-│   └───ingestion/
-│       ├───__init__.py
-│       ├───config.py
-│       ├───connector.py
-│       ├───indexer.py
-│       └───main.py
-└───tests/
+Follow these steps to get the agent running locally.
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/teddytesfa/Enterprise-Internal-Knowlwge-Base-Q-A-Agentic-RAG.git
+cd Enterprise-Internal-Knowlwge-Base-Q-A-Agentic-RAG
 ```
 
--   `data/vector_db`: Stores the ChromaDB vector index.
--   `notebooks`: Contains Jupyter notebooks for experimentation and prototyping.
--   `resources/sample-datasets`: Contains sample documents for the knowledge base.
--   `src/api`: Contains the FastAPI application.
--   `src/ingestion`: Contains the Python modules for the ingestion and indexing pipeline.
+### 2. Set Up Environment
+Create and activate a virtual environment:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
 
-## Setup and Installation
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
 
-1.  **Clone the repository:**
-    ```bash
-    git clone <repository-url>
-    cd <repository-directory>
-    ```
+### 4. Configure API Keys & LLM Provider
+Copy the example environment file:
+```bash
+cp .env.example .env
+```
+Then, configure your preferred LLM provider in `.env`.
 
-2.  **Create and activate a virtual environment:**
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate
-    ```
-    _On Windows, use `.venv\Scripts\activate`_
 
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
+#### Option A: Use Groq (Default)
+Set your Groq API key. You can explicitly set the provider to `groq` or leave it default.
+```ini
+GROQ_API_KEY="your_groq_cloud_key"
+LLM_PROVIDER="groq"
+```
 
-4.  **Set up your Google API Key:**
-    This project uses the Google Gemini LLM. You need to set up your Google API key as an environment variable.
+#### Option B: Use Google Gemini
+Set your Google API key and change the provider to `gemini`.
+```ini
+GOOGLE_API_KEY="your_google_ai_studio_key"
+LLM_PROVIDER="gemini"
+```
 
-    ```bash
-    export GOOGLE_API_KEY="your-google-api-key"
-    ```
-
-## Usage
-
-To run the API server, execute the `main.py` script in the `src/api` directory:
-
+### 5. Run the Server
+Start the API server. This will automatically ingest sample documents from `resources/sample-datasets` if the index doesn't exist.
 ```bash
 python src/api/main.py
 ```
 
-This will start the FastAPI server. The server will automatically load the documents, create the index, and expose the `/query` endpoint for you to ask questions.
+## 🔌 Usage
 
-You can test the endpoint with `curl`:
+Once the server is running (default: `http://0.0.0.0:8000`), you can query the agent via the `/query` endpoint.
+
+**Example Request:**
 ```bash
 curl -X POST "http://0.0.0.0:8000/query" \
--H "Content-Type: application/json" \
--d '{"question": "How do i set up my local dev for nexus project"}'
+     -H "Content-Type: application/json" \
+     -d '{"question": "How do i set up my local dev for nexus project?"}'
 ```
 
-## Testing
-
-To run the unit tests for the application, navigate to the project root directory and execute the following command:
-
-```bash
-pytest tests/
+**Example Response:**
+```json
+"To set up your local development environment for Project Nexus, you need to install Docker, configure the .env file..."
 ```
 
-This will run all tests located in the `tests/` directory.
+## 📚 Documentation & Experimentation
 
-## Notebook
-
-The `notebooks/01_document_ingestion_indexing.ipynb` notebook provides a detailed, step-by-step walkthrough of the entire pipeline. It's a great resource for understanding the implementation details and for experimenting with different configurations.
+-   **Notebooks**:
+    -   `notebooks/01_document_ingestion_indexing.ipynb`: Step-by-step code walkthrough of the RAG pipeline.
+    -   `notebooks/react_agent_llamaIndex_rag_test.ipynb`: Demonstration of the ReAct Agent interacting with the RAG pipeline.
+-   **Source Code**:
+    -   `src/agent/`: Core ReAct agent logic.
+    -   `src/ingestion/`: Document processing and indexing.
+    -   `src/api/`: FastAPI entry point.
