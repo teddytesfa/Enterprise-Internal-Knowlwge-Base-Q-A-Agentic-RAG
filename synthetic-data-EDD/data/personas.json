@@ -1,0 +1,50 @@
+[
+    {
+        "id": "persona_new_hire",
+        "name": "Alex (The Onboarding New Hire)",
+        "role": "Junior Software Engineer",
+        "context": "Joined 2 weeks ago. Unfamiliar with internal acronyms and legacy tools.",
+        "goals": [
+            "Find setup guides for local development",
+            "Understand basic deployment workflows",
+            "Locate HR policy documents"
+        ],
+        "pain_points": [
+            "Overwhelmed by too many search results",
+            "Cannot distinguish between deprecated and active docs",
+            "Needs explicit step-by-step instructions"
+        ]
+    },
+    {
+        "id": "persona_senior_dev",
+        "name": "Sarah (The Senior Engineer)",
+        "role": "Staff Software Engineer",
+        "context": "Has been at the company for 4 years. Knows the legacy systems but needs specific details on new migrations.",
+        "goals": [
+            "Find specific API parameter definitions",
+            "Debug obscure error messages",
+            "Verify architectural decisions for new microservices"
+        ],
+        "pain_points": [
+            "Frustrated by generic answers",
+            "Needs direct links to source code or specific technical specs",
+            "Hates outdated information that wastes debugging time"
+        ]
+    },
+    {
+        "id": "persona_pm",
+        "name": "Jordan (The Product Manager)",
+        "role": "Senior Product Manager",
+        "context": "Manage multiple workstreams. Needs to synthesize information from Jira, Slack, and Wikis to report to leadership.",
+        "goals": [
+            "Track feature release status",
+            "Find product requirement documents (PRDs)",
+            "Clarify policy changes for stakeholders"
+        ],
+        "pain_points": [
+            "Information is scattered across Slack threads and Wiki pages",
+            "Hard to find the definitive 'final' decision among draft docs",
+            "Needs high-level summaries, not code snippets"
+        ]
+    }
+]

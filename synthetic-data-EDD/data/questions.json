@@ -1,0 +1,26 @@
+[
+    {
+        "id": "q_001",
+        "question": "How do I set up my local development environment for the Nexus project?",
+        "persona_id": "persona_new_hire",
+        "scenario_id": "scenario_poor_relevance"
+    },
+    {
+        "id": "q_002",
+        "question": "How do I set up the local dev environment for WordPress project?",
+        "persona_id": "persona_new_hire",
+        "scenario_id": "scenario_wordpress_setup"
+    },
+    {
+        "id": "q_003",
+        "question": "What is the policy on remote work for Q3?",
+        "persona_id": "persona_pm",
+        "scenario_id": "scenario_info_overload"
+    },
+    {
+        "id": "q_004",
+        "question": "I'm getting a 'Connection Refused' error when running the ingestion script. What should I check?",
+        "persona_id": "persona_new_hire",
+        "scenario_id": "scenario_poor_relevance"
+    }
+]

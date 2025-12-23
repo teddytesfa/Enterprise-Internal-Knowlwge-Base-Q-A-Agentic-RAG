@@ -1,0 +1,30 @@
+[
+    {
+        "id": "scenario_poor_relevance",
+        "name": "Poor Search Relevance",
+        "description": "Tests the agent's ability to filter out noise and return the specific document requested.",
+        "business_problem": "Employees cannot find what they need because search retrieves too many irrelevant pages.",
+        "success_criteria": "The agent must retrieve the exact document/section answering the specific query, ranking it #1."
+    },
+    {
+        "id": "scenario_info_overload",
+        "name": "Information Overload",
+        "description": "Tests the agent's ability to synthesize a concise answer from multiple verbose sources.",
+        "business_problem": "Slack channels and Wikis grow non-stop; nobody knows where the 'source of truth' is.",
+        "success_criteria": "The agent must provide a summary answer of under 100 words that captures the key facts without dumping raw text."
+    },
+    {
+        "id": "scenario_conflict_resolution",
+        "name": "Outdated or Conflicting Docs",
+        "description": "Tests the agent's ability to identify and prioritize the most recent or authoritative source when contradictions exist.",
+        "business_problem": "Docs often contradict Slack threads or old versions. Developers follow broken steps.",
+        "success_criteria": "The agent must explicitly identify the conflict and cite the newer/authoritative source, warning about the older one."
+    },
+    {
+        "id": "scenario_wordpress_setup",
+        "name": "WordPress Local Setup",
+        "description": "Tests the agent's ability to provide setup instructions for a specific project (WordPress).",
+        "business_problem": "New hires spend too much time on environmental setup due to fragmented documentation.",
+        "success_criteria": "The agent must provide a clear list of setup steps and cite the relevant project documentation."
+    }
+]
