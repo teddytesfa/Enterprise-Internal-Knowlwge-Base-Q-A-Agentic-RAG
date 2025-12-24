@@ -25,3 +25,6 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
+synthetic-data-EDD/temp_data/
+synthetic-data-EDD/my_notes.txt
+synthetic-data-EDD/data/responses_example_20251223_160420.json
