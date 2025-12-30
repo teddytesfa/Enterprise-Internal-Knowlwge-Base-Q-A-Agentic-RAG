@@ -1,0 +1,70 @@
+[
+    {
+        "question": "How do I set up my local development environment for the Nexus project?",
+        "response": [
+            "To set up the local development environment for the Nexus project, follow these steps:\n\n1. Install Git by following the instructions on the official Git website.\n2. Download and install Docker Desktop from the official Docker website.\n3. Install Python 3.9 from the official Python website.\n4. Install Node.js version 16 from the official Node.js website.\n5. Install the internal 'Nexus' library by running the command `pip install nexus-library`.\n\nAfter setting up the local environment, to request access to cloud resources for the Nexus project, use the `CloudProvisioner` tool by running the command `cprov request --team=nexus-dev` in your terminal.\n[Source: Unknown]",
+            "No source info available"
+        ],
+        "duration_ms": 3878.5635530002764,
+        "timestamp": "2025-12-24T20:32:18.590099",
+        "model_provider": "groq",
+        "context_tokens": 0,
+        "completion_tokens": 0,
+        "id": "q_001",
+        "user_type": "persona_new_hire",
+        "scenario": "scenario_poor_relevance",
+        "judgment": "",
+        "reason": ""
+    },
+    {
+        "question": "How do I set up the local dev environment for WordPress project?",
+        "response": [
+            "To set up a local development environment for a WordPress project, you should follow these steps:\n\n1. Install Git by following the instructions on the official Git website.\n2. Install Docker by downloading and installing Docker Desktop from the official Docker website.\n3. Install a compatible version of Python and Node.js. However, the provided information does not specify the required versions for a WordPress project.\n4. You may need to install additional tools or libraries specific to WordPress, but this information is not provided.\n\nIt's also important to note that requesting cloud resources may require using the `CloudProvisioner` tool, but the exact command to use would depend on the specific project and team you are working with.\n\n[Source: internal knowledge base]",
+            "No source info available"
+        ],
+        "duration_ms": 9038.25130399855,
+        "timestamp": "2025-12-24T20:32:27.628470",
+        "model_provider": "groq",
+        "context_tokens": 0,
+        "completion_tokens": 0,
+        "id": "q_002",
+        "user_type": "persona_new_hire",
+        "scenario": "scenario_poor_relevance",
+        "judgment": "",
+        "reason": ""
+    },
+    {
+        "question": "What is the policy on remote work for Q3?",
+        "response": [
+            "I could not find any information about the remote work policy for Q3 in the company documents. The available information only covers general company policies and procedures, but does not include specific details about remote work for Q3. [Source: company_handbook.md]",
+            "No source info available"
+        ],
+        "duration_ms": 41149.999740002386,
+        "timestamp": "2025-12-24T20:33:08.778561",
+        "model_provider": "groq",
+        "context_tokens": 0,
+        "completion_tokens": 0,
+        "id": "q_003",
+        "user_type": "persona_pm",
+        "scenario": "scenario_info_overload",
+        "judgment": "",
+        "reason": ""
+    },
+    {
+        "question": "I'm getting a 'Connection Refused' error when running the ingestion script. What should I check?",
+        "response": [
+            "The provided information doesn't directly address the 'Connection Refused' error in the ingestion script. However, you can try checking the troubleshooting guide for common local setup issues, which might offer some general guidance on resolving connection-related problems. Ensure your local development environment is set up correctly as outlined in the company handbook. If the problem persists, review the specific configuration and dependencies required for the ingestion script, such as the correct version of Python.\n\nFor most projects, Python 3.8 is used, but for Project Nexus, Python 3.9 is required due to a dependency issue. \n\n[Source: company_handbook.md]",
+            "No source info available"
+        ],
+        "duration_ms": 47426.26868200023,
+        "timestamp": "2025-12-24T20:33:56.204918",
+        "model_provider": "groq",
+        "context_tokens": 0,
+        "completion_tokens": 0,
+        "id": "q_004",
+        "user_type": "persona_new_hire",
+        "scenario": "scenario_poor_relevance",
+        "judgment": "",
+        "reason": ""
+    }
+]

@@ -19,12 +19,5 @@
         "description": "Tests the agent's ability to identify and prioritize the most recent or authoritative source when contradictions exist.",
         "business_problem": "Docs often contradict Slack threads or old versions. Developers follow broken steps.",
         "success_criteria": "The agent must explicitly identify the conflict and cite the newer/authoritative source, warning about the older one."
-    },
-    {
-        "id": "scenario_wordpress_setup",
-        "name": "WordPress Local Setup",
-        "description": "Tests the agent's ability to provide setup instructions for a specific project (WordPress).",
-        "business_problem": "New hires spend too much time on environmental setup due to fragmented documentation.",
-        "success_criteria": "The agent must provide a clear list of setup steps and cite the relevant project documentation."
     }
 ]

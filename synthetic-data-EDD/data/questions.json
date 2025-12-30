@@ -9,7 +9,7 @@
         "id": "q_002",
         "question": "How do I set up the local dev environment for WordPress project?",
         "persona_id": "persona_new_hire",
-        "scenario_id": "scenario_wordpress_setup"
+        "scenario_id": "scenario_poor_relevance"
     },
     {
         "id": "q_003",

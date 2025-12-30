@@ -16,99 +16,147 @@ import google.generativeai as genai
 # Load environment variables
 load_dotenv()
 
-# Initialize OpenAI client
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 # Configure Gemini client
 try:
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 except Exception as e:
     print(f"Could not configure Gemini: {e}")
 
-def evaluate_with_gemini(prompt):
-    """Evaluates a RAG response using Gemini."""
-    model = genai.GenerativeModel('gemini-pro')
-    response = model.generate_content(prompt)
-    return response.text
-
-def evaluate_rag_response(question, new_response, good_examples, bad_examples, judge_model="openai"):
-    """Use an LLM to evaluate a RAG response with few-shot examples."""
+def load_context_docs(context_dir):
+    """Loads all .md and .txt files from the context directory."""
+    context_text = ""
+    if not context_dir or not os.path.exists(context_dir):
+        return context_text
     
-    # Build the prompt with examples and the new response
-    prompt = f"""You are evaluating the output of a RAG system for workshop transcripts. 
+    for filename in os.listdir(context_dir):
+        if filename.endswith(('.md', '.txt')):
+            file_path = os.path.join(context_dir, filename)
+            try:
+                with open(file_path, 'r') as f:
+                    context_text += f"\n--- Source: {filename} ---\n"
+                    context_text += f.read() + "\n"
+            except Exception as e:
+                print(f"Error loading {filename}: {e}")
+    return context_text
 
-Question:
-{question}
+def generate_context_summary(context_text, judge_model="openai"):
+    """Generates a brief summary of the available context to define the judge's scope."""
+    if not context_text:
+        return "No internal documentation provided."
+        
+    prompt = f"""Summarize the following internal documentation in 3-5 bullet points. 
+Focus on what topics are covered (e.g., local setup, cloud provisioning, specific projects).
+This summary will be used to define the 'Scope of Knowledge' for an evaluation judge.
 
+{context_text[:5000]} # Limit context for summary
 """
     
-    # Add good examples
-    if good_examples:
-        prompt += "### Good example(s):\n"
-        for ex in good_examples:
-            response_text = ex['response'][0] if isinstance(ex['response'], list) else str(ex['response'])
-            prompt += f"{response_text}\n\n"
-            prompt += f"Reason this was good: {ex.get('reason', 'No reason provided')}\n\n"
-    
-    # Add bad examples
-    if bad_examples:
-        prompt += "### Bad example(s):\n"
-        for ex in bad_examples:
-            response_text = ex['response'][0] if isinstance(ex['response'], list) else str(ex['response'])
-            prompt += f"{response_text}\n\n"
-            prompt += f"Reason this was bad: {ex.get('reason', 'No reason provided')}\n\n"
-    
-    # Add new response to evaluate
-    prompt += f"""### New system response to evaluate:
-{new_response}
-
-### Evaluation criteria:
-A response is acceptable (+1) if:
-- It directly answers the question with specific details
-- It is factually correct based on the workshop content
-- It avoids hallucinations or made-up information
-
-A response is unacceptable (-1) if:
-- It's vague, generic, or off-topic
-- It hallucinates or fabricates content
-- It fails to address key parts of the question
-
-### Format your reply like this:
-Judgment: \"+1\" or \"-1\"
-Reason: (brief explanation)
-"""
-    
-    # Call the selected LLM to evaluate
     if judge_model == "gemini":
         try:
-            content = evaluate_with_gemini(prompt)
+            model = genai.GenerativeModel('gemini-3-flash-preview')
+            response = model.generate_content(prompt)
+            return response.text
+        except Exception:
+            return "Summary unavailable (API error)."
+    else:
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3
+            )
+            return response.choices[0].message.content
+        except Exception:
+            return "Summary unavailable (API error)."
+
+def evaluate_rag_response(question, new_response, reference_context, scope_summary, good_examples, bad_examples, judge_model="openai"):
+    """Use an LLM to evaluate a RAG response using sophisticated prompt engineering."""
+    
+    system_prompt = f"""You are an Expert Technical Auditor for Enterprise Internal Systems. 
+Your task is to evaluate RAG (Retrieval-Augmented Generation) responses based strictly on provided internal documentation.
+
+### Scope of Knowledge:
+{scope_summary}
+
+### Evaluation Criteria (RAG Triad):
+1. **Groundedness (Faithfulness)**: Every claim in the response must be directly supported by the Reference Context. If a detail is correct in the real world but NOT in the provided context, it must be flagged as a hallucination.
+2. **Relevance**: The response must directly address all parts of the user's question.
+
+### Instructions:
+- Adopt a critical, analytical tone.
+- Perform a step-by-step "Chain-of-Thought" analysis before reaching a verdict.
+- Ignore your pre-trained public knowledge. Use ONLY the Reference Context.
+"""
+
+    user_prompt = f"""### User Question:
+{question}
+
+### Reference Context (Ground Truth):
+{reference_context if reference_context else "NO CONTEXT PROVIDED"}
+
+### System Response to Evaluate:
+{new_response}
+
+"""
+    
+    if good_examples or bad_examples:
+        user_prompt += "### Reference Examples for Style:\n"
+        if good_examples:
+            for ex in good_examples:
+                res = ex['response'][0] if isinstance(ex['response'], list) else str(ex['response'])
+                user_prompt += f"Good Response: {res}\nReason: {ex.get('reason', 'N/A')}\n\n"
+        if bad_examples:
+            for ex in bad_examples:
+                res = ex['response'][0] if isinstance(ex['response'], list) else str(ex['response'])
+                user_prompt += f"Bad Response: {res}\nReason: {ex.get('reason', 'N/A')}\n\n"
+
+    user_prompt += """
+### Required Output Format:
+Thought: (Analyze groundedness and relevance step-by-step. Compare the response to the Reference Context claim-by-claim.)
+Judgment: "+1" (Pass) or "-1" (Fail)
+Reason: (Brief summary of the thought process)
+"""
+
+    # Call the selected LLM
+    if judge_model == "gemini":
+        try:
+            model = genai.GenerativeModel('gemini-3-flash-preview')
+            content = model.generate_content(system_prompt + "\n\n" + user_prompt).text
         except Exception as e:
-            print(f"Error with Gemini evaluation: {e}")
-            return "error", "Gemini API call failed"
-    else: # Default to openai
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": "You are an expert evaluator for RAG systems."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.1
-        )
-        content = response.choices[0].message.content
+            return "error", f"Gemini API failed: {str(e)}", ""
+    else:
+        try:
+            client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.1
+            )
+            content = response.choices[0].message.content
+        except Exception as e:
+            return "error", f"OpenAI API failed: {str(e)}", ""
     
     # Parse the result
-    if "Judgment: \"+1\"" in content or "Judgment: +1" in content:
+    judgment = "unknown"
+    if 'Judgment: "+1"' in content or 'Judgment: +1' in content:
         judgment = "pass"
-    elif "Judgment: \"-1\"" in content or "Judgment: -1" in content:
+    elif 'Judgment: "-1"' in content or 'Judgment: -1' in content:
         judgment = "fail"
-    else:
-        judgment = "unknown"
     
-    # Extract reason
-    reason_parts = content.split("Reason:", 1)
-    reason = reason_parts[1].strip() if len(reason_parts) > 1 else "No reason provided"
+    # Extract thought and reason
+    thought = ""
+    if "Thought:" in content and "Judgment:" in content:
+        thought = content.split("Thought:")[1].split("Judgment:")[0].strip()
+        
+    reason = "No reason provided"
+    if "Reason:" in content:
+        reason = content.split("Reason:")[1].strip()
     
-    return judgment, reason
+    return judgment, reason, thought
 
 def main():
     """Run a simple test of the LLM judge."""
@@ -117,6 +165,7 @@ def main():
     parser.add_argument("--input-file", required=True, help="Path to the JSON file containing responses to evaluate.")
     parser.add_argument("--examples-file", default="data/evaluated_responses_20250328_190348.json",
                         help="Path to the JSON file containing labeled examples for few-shot learning.")
+    parser.add_argument("--context-dir", help="Directory containing internal documentation for grounding.")
     parser.add_argument("--limit", type=int, help="Limit evaluation to the first N responses.")
     parser.add_argument("--output-prefix", default="llm_evaluated",
                         help="Prefix for the timestamped output file and the _all.json file.")
@@ -125,7 +174,21 @@ def main():
     args = parser.parse_args()
 
     print(f"Using {args.judge_model.upper()} as the judge.")
-    print("Loading data...")
+    
+    # Load context if directory provided
+    reference_context = ""
+    scope_summary = "General company knowledge."
+    if args.context_dir:
+        print(f"Loading context from {args.context_dir}...")
+        reference_context = load_context_docs(args.context_dir)
+        if reference_context:
+            print(f"Generating scope summary using {args.judge_model}...")
+            scope_summary = generate_context_summary(reference_context, judge_model=args.judge_model)
+            print(f"Scope Summary: {scope_summary[:100]}...")
+        else:
+            print(f"Warning: No valid context files found in {args.context_dir}")
+
+    print("Loading evaluation data...")
     
     # Load examples (for few-shot learning)
     try:
@@ -135,7 +198,7 @@ def main():
     except Exception as e:
         print(f"Error loading examples file {args.examples_file}: {e}")
         print("Proceeding without few-shot examples.")
-        examples = [] # Ensure examples is defined
+        examples = []
 
     # Load responses to evaluate
     try:
@@ -144,41 +207,35 @@ def main():
         print(f"Loaded {len(to_evaluate)} responses from {args.input_file}")
     except Exception as e:
         print(f"Error loading input file {args.input_file}: {e}")
-        return # Exit if we can't load responses
+        return
 
-    # Apply limit if provided
-    if args.limit and args.limit > 0 and args.limit < len(to_evaluate):
+    # Apply limit
+    if args.limit and 0 < args.limit < len(to_evaluate):
         to_evaluate = to_evaluate[:args.limit]
         print(f"LIMIT MODE: Evaluating only the first {len(to_evaluate)} responses.")
     
-    # Select a few examples (if loaded)
-    good_examples = []
-    bad_examples = []
-    if examples:
-        good_examples = [ex for ex in examples if ex.get('judgment') == 'pass'][:1]
-        bad_examples = [ex for ex in examples if ex.get('judgment') == 'fail'][:1]
-        print(f"Using {len(good_examples)} good and {len(bad_examples)} bad examples for few-shot.")
+    good_examples = [ex for ex in examples if ex.get('judgment') == 'pass'][:1]
+    bad_examples = [ex for ex in examples if ex.get('judgment') == 'fail'][:1]
 
-    # Evaluate responses
+    # Evaluate
     results = []
-    total_responses_to_process = len(to_evaluate)
-    print(f"Starting evaluation of {total_responses_to_process} responses...")
+    total = len(to_evaluate)
+    print(f"Starting evaluation of {total} responses...")
     
     for i, item in enumerate(to_evaluate):
-        print(f"\nEvaluating response {i+1}/{total_responses_to_process}...")
+        print(f"\nEvaluating response {i+1}/{total}...")
         
         question = item['question']
-        if isinstance(item['response'], list):
-            response_text = item['response'][0]
-        else:
-            response_text = str(item['response'])
+        response_text = item['response'][0] if isinstance(item['response'], list) else str(item['response'])
         
         print(f"Question: {question[:50]}...")
         
-        # Evaluate with the selected LLM
-        judgment, reason = evaluate_rag_response(
+        # Evaluate with prompt engineering
+        judgment, reason, thought = evaluate_rag_response(
             question, 
             response_text, 
+            reference_context,
+            scope_summary,
             good_examples, 
             bad_examples,
             judge_model=args.judge_model
@@ -190,32 +247,30 @@ def main():
         # Save result
         item['judgment'] = judgment
         item['reason'] = reason
-        item['evaluation_type'] = f'llm-{args.judge_model}'
+        item['thought'] = thought # Store the step-by-step analysis
+        item['evaluation_type'] = f'llm-{args.judge_model}-pe' # pe for Prompt Engineering
+        item['context_provided'] = bool(reference_context)
         results.append(item)
         
-        # Wait a bit between calls
         time.sleep(1)
     
-    # Save results to a new file with timestamp
+    # Save results
     from datetime import datetime
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_dir = os.path.dirname(args.input_file)
     base_prefix = os.path.basename(args.output_prefix)
-    timestamped_filename = f"{base_prefix}_{timestamp}.json"
-    output_filename = os.path.join(output_dir, timestamped_filename)
     
+    output_filename = os.path.join(output_dir, f"{base_prefix}_{timestamp}.json")
     with open(output_filename, 'w') as f:
         json.dump(results, f, indent=2)
     
-    print(f"\nEvaluation complete! Results saved to {output_filename}")
-    
-    # Also save to the _all file expected by the viewer
     all_output_filename = os.path.join(output_dir, f"{base_prefix}_all.json")
     with open(all_output_filename, 'w') as f:
         json.dump(results, f, indent=2)
     
-    print(f"Also saved results to {all_output_filename}")
-    print("You can view them with the JSON viewer.")
+    print(f"\nEvaluation complete!")
+    print(f"Results saved to: {output_filename}")
+    print(f"All-view file updated: {all_output_filename}")
 
 if __name__ == "__main__":
     main()

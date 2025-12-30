@@ -95,10 +95,20 @@ Follow these steps to walk through the synthetic data generation and evaluation 
         # Ensure file paths exist or use your actual file names
         # Add --limit 2 for a quick test during the lesson:
         python synthetic-data-EDD/simple_llm_judge.py \
-            --input-file synthetic-data-EDD/data/responses_gemini_20250328_224605.json \
-            --examples-file synthetic-data-EDD/data/evaluated_responses_20250328_190348.json \
-            --output-prefix synthetic-data-EDD/data/gemini_llm_evaluated \
+            --input-file synthetic-data-EDD/data/responses_groq_20251224_203356.json \
+            --examples-file synthetic-data-EDD/data/evaluated_responses_20251224_203356.json \
+            --context-dir resources/sample-datasets \
+            --output-prefix synthetic-data-EDD/data/context_aware_pe_eval \
+            --judge-model gemini \
             --limit 2
+
+         python synthetic-data-EDD/simple_llm_judge.py \
+            --input-file synthetic-data-EDD/temp_data/responses_gemini_20250328_224605.json \
+            --examples-file synthetic-data-EDD/temp_data/evaluated_responses_20250328_190348.json \
+            --output-prefix synthetic-data-EDD/temp_data/gemini_llm_evaluated \
+            --judge-model gemini \
+            --limit 2
+
         ```
     *   **Output:** The script saves evaluated results (including pass/fail judgment and reason from the LLM judge) to timestamped and `_all.json` files (e.g., `gemini_llm_evaluated_*.json`) in the data directory. If using `--limit`, fewer results will be generated.
 

@@ -1,0 +1,38 @@
+[
+  {
+    "question": "How do I set up my local development environment for the Nexus project?",
+    "response": [
+      "To set up the local development environment for the Nexus project, follow these steps:\n\n1. Install Git by following the instructions on the official Git website.\n2. Download and install Docker Desktop from the official Docker website.\n3. Install Python 3.9 from the official Python website.\n4. Install Node.js version 16 from the official Node.js website.\n5. Install the internal 'Nexus' library by running the command `pip install nexus-library`.\n\nAfter setting up the local environment, to request access to cloud resources for the Nexus project, use the `CloudProvisioner` tool by running the command `cprov request --team=nexus-dev` in your terminal.\n[Source: Unknown]",
+      "No source info available"
+    ],
+    "duration_ms": 3878.5635530002764,
+    "timestamp": "2025-12-24T20:32:18.590099",
+    "model_provider": "groq",
+    "context_tokens": 0,
+    "completion_tokens": 0,
+    "id": "q_001",
+    "user_type": "persona_new_hire",
+    "scenario": "scenario_poor_relevance",
+    "judgment": "fail",
+    "reason": "The response provides highly specific technical details, version numbers (Python 3.9, Node.js 16), and project-specific CLI commands (`cprov request --team=nexus-dev`), yet it cites the source as \"Unknown.\" In the context of a RAG system for specific workshop transcripts, providing detailed instructions that cannot be grounded in a source is a hallucination. The system is likely using its internal training data or fabricating details to fill in the gaps, which violates the requirement to be factually correct based on the specific workshop content.",
+    "evaluation_type": "llm-gemini"
+  },
+  {
+    "question": "How do I set up the local dev environment for WordPress project?",
+    "response": [
+      "To set up a local development environment for a WordPress project, you should follow these steps:\n\n1. Install Git by following the instructions on the official Git website.\n2. Install Docker by downloading and installing Docker Desktop from the official Docker website.\n3. Install a compatible version of Python and Node.js. However, the provided information does not specify the required versions for a WordPress project.\n4. You may need to install additional tools or libraries specific to WordPress, but this information is not provided.\n\nIt's also important to note that requesting cloud resources may require using the `CloudProvisioner` tool, but the exact command to use would depend on the specific project and team you are working with.\n\n[Source: internal knowledge base]",
+      "No source info available"
+    ],
+    "duration_ms": 9038.25130399855,
+    "timestamp": "2025-12-24T20:32:27.628470",
+    "model_provider": "groq",
+    "context_tokens": 0,
+    "completion_tokens": 0,
+    "id": "q_002",
+    "user_type": "persona_new_hire",
+    "scenario": "scenario_poor_relevance",
+    "judgment": "fail",
+    "reason": "The response is vague and fails to provide specific instructions on how to actually set up the WordPress project (e.g., repo URLs, specific terminal commands, or setup scripts). It acknowledges that the source material lacks details on required versions and additional tools, rendering the answer incomplete. Furthermore, it includes irrelevant information about a \"CloudProvisioner\" tool for cloud resources, which does not pertain to a local development environment setup.",
+    "evaluation_type": "llm-gemini"
+  }
+]
